@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adrián Hinostroza | Embedded Systems & IoT</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        tech: {
+                            dark: '#0f172a',
+                            card: '#1e293b',
+                            primary: '#0ea5e9', // Cyan
+                            accent: '#10b981', // Emerald
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0ea5e9; 
+        }
+
+        .glass-nav {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .project-card, .timeline-card {
+            transition: all 0.3s ease;
+        }
+        
+        .project-card:hover, .timeline-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px -10px rgba(14, 165, 233, 0.3);
+            border-color: rgba(14, 165, 233, 0.5);
+        }
+
+        .tech-gradient-text {
+            background: linear-gradient(to right, #0ea5e9, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        #canvas-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.25;
+        }
+
+        .skill-badge {
+            @apply px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-xs font-mono text-gray-300;
+        }
+    </style>
+</head>
+<body class="antialiased font-sans relative selection:bg-tech-primary selection:text-white">
+
+    <nav class="fixed w-full z-50 glass-nav transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex-shrink-0 flex items-center gap-2 cursor-pointer" onclick="window.scrollTo(0,0)">
+                    <i class="fas fa-satellite text-tech-primary text-2xl"></i>
+                    <span class="font-mono font-bold text-xl tracking-tighter text-white">AH<span class="text-tech-primary">.</span>Eng</span>
+                </div>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex space-x-8 items-center">
+                    <a href="#about" data-i18n="nav_about" class="text-gray-300 hover:text-tech-primary transition-colors text-sm font-medium">About</a>
+                    <a href="#experience" data-i18n="nav_exp" class="text-gray-300 hover:text-tech-primary transition-colors text-sm font-medium">Experience</a>
+                    <a href="#skills" data-i18n="nav_skills" class="text-gray-300 hover:text-tech-primary transition-colors text-sm font-medium">Skills</a>
+                    <a href="#portfolio" data-i18n="nav_portfolio" class="text-gray-300 hover:text-tech-primary transition-colors text-sm font-medium">Projects</a>
+                    <a href="#contact" data-i18n="nav_contact" class="px-5 py-2.5 rounded-lg bg-tech-primary/10 border border-tech-primary/30 text-tech-primary hover:bg-tech-primary hover:text-white transition-all duration-300 text-sm font-medium">Contact</a>
+                    
+                    <!-- Language Toggle -->
+                    <button onclick="toggleLanguage()" class="flex items-center gap-2 px-3 py-1.5 rounded-full border border-gray-600 hover:border-tech-primary text-gray-300 hover:text-white transition-all text-xs font-mono focus:outline-none">
+                        <i class="fas fa-globe text-tech-primary"></i> <span class="lang-toggle-text">ES</span>
+                    </button>
+                </div>
+
+                <!-- Mobile menu button & Mobile Lang Toggle -->
+                <div class="md:hidden flex items-center gap-4">
+                    <button onclick="toggleLanguage()" class="flex items-center gap-1 text-gray-300 hover:text-white text-xs font-mono focus:outline-none">
+                        <i class="fas fa-globe text-tech-primary"></i> <span class="lang-toggle-text">ES</span>
+                    </button>
+                    <button id="mobile-menu-btn" class="text-gray-300 hover:text-white focus:outline-none p-2">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu panel -->
+        <div id="mobile-menu" class="hidden md:hidden bg-tech-card border-b border-gray-800">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#about" data-i18n="nav_about" class="block px-3 py-2 text-base font-medium text-gray-300 hover:text-tech-primary hover:bg-gray-800 rounded-md">About</a>
+                <a href="#experience" data-i18n="nav_exp" class="block px-3 py-2 text-base font-medium text-gray-300 hover:text-tech-primary hover:bg-gray-800 rounded-md">Experience</a>
+                <a href="#skills" data-i18n="nav_skills" class="block px-3 py-2 text-base font-medium text-gray-300 hover:text-tech-primary hover:bg-gray-800 rounded-md">Skills</a>
+                <a href="#portfolio" data-i18n="nav_portfolio" class="block px-3 py-2 text-base font-medium text-gray-300 hover:text-tech-primary hover:bg-gray-800 rounded-md">Projects</a>
+                <a href="#contact" data-i18n="nav_contact" class="block px-3 py-2 text-base font-medium text-tech-primary hover:bg-gray-800 rounded-md">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <section id="home" class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+        <canvas id="canvas-bg"></canvas>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center md:text-left grid md:grid-cols-2 gap-12 items-center">
+            <div class="order-2 md:order-1">
+                <div class="inline-block px-4 py-1.5 rounded-full border border-tech-primary/30 bg-tech-primary/10 text-tech-primary font-mono text-xs sm:text-sm mb-6 animate-pulse">
+                    <i class="fas fa-microchip mr-2"></i> <span data-i18n="hero_badge">MSc. Electronics Engineer</span>
+                </div>
+                <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-4" data-i18n="hero_title">
+                    Hi, I'm <br>
+                    <span class="tech-gradient-text">Adrián Hinostroza</span>
+                </h1>
+                <p class="mt-4 text-xl text-gray-400 mb-8 max-w-lg mx-auto md:mx-0 font-light leading-relaxed" data-i18n="hero_desc">
+                    Specialized in end-to-end design of embedded systems, high-precision GNSS receivers, and Wireless Sensor Networks applied to environmental monitoring.
+                </p>
+                
+                <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                    <a href="#portfolio" class="px-6 py-3 rounded-xl bg-tech-primary text-white font-medium hover:bg-blue-500 hover:shadow-lg hover:shadow-tech-primary/25 transition-all duration-300 flex items-center justify-center gap-2">
+                        <span data-i18n="hero_btn_projects">View Projects</span> <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <a href="CV_ADRIAN_HINOSTROZA_2026.pdf" download class="px-6 py-3 rounded-xl bg-tech-accent/10 border border-tech-accent/30 text-tech-accent font-medium hover:bg-tech-accent hover:text-white transition-all duration-300 flex items-center justify-center gap-2">
+                        <i class="fas fa-file-pdf"></i> <span data-i18n="hero_btn_cv">Download CV_ADRIAN_HINOSTROZA_2026.pdf</span>
+                    </a>
+                </div>
+                <div class="mt-8 flex gap-6 justify-center md:justify-start">
+                    <a href="https://www.linkedin.com/in/athm15" target="_blank" class="text-gray-400 hover:text-[#0A66C2] text-2xl transition-colors"><i class="fab fa-linkedin"></i></a>
+                    <a href="mailto:ahinostrozam15@gmail.com" class="text-gray-400 hover:text-white text-2xl transition-colors"><i class="fas fa-envelope"></i></a>
+                </div>
+            </div>
+            
+            <div class="order-1 md:order-2 flex justify-center">
+                <div class="relative w-72 h-72 sm:w-96 sm:h-96">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-tech-primary to-tech-accent rounded-full blur-3xl opacity-20 animate-pulse"></div>
+                    <img src="https://placehold.co/600x600/1e293b/0ea5e9?text=Embedded+Systems+Engineer" alt="Adrián Hinostroza" class="relative rounded-2xl border border-gray-800 shadow-2xl object-cover w-full h-full transform -rotate-3 hover:rotate-0 transition-transform duration-500">
+                    
+                    <div class="absolute -top-4 -right-4 bg-tech-card p-3 rounded-xl border border-gray-700 shadow-lg flex items-center gap-2 animate-bounce" style="animation-duration: 3s;">
+                        <i class="fas fa-satellite-dish text-blue-400 text-2xl"></i>
+                        <span class="font-mono text-sm">GNSS RTK</span>
+                    </div>
+                    <div class="absolute -bottom-4 -left-4 bg-tech-card p-3 rounded-xl border border-gray-700 shadow-lg flex items-center gap-2 animate-bounce" style="animation-duration: 4s;">
+                        <i class="fas fa-microchip text-tech-accent text-2xl"></i>
+                        <span class="font-mono text-sm">ESP32/C++</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
+            <span class="text-xs text-gray-500 font-mono mb-2" data-i18n="hero_scroll">Scroll</span>
+            <div class="w-6 h-10 border-2 border-gray-600 rounded-full flex justify-center p-1">
+                <div class="w-1.5 h-3 bg-tech-primary rounded-full animate-bounce"></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="py-24 bg-tech-dark relative border-t border-gray-800/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-16 items-start">
+                <div>
+                    <h2 class="text-3xl md:text-4xl font-bold mb-6 flex items-center gap-4">
+                        <span class="w-12 h-1 bg-tech-primary"></span>
+                        <span data-i18n="about_title">About Me</span>
+                    </h2>
+                    <p class="text-gray-400 text-lg leading-relaxed mb-6" data-i18n="about_p1">
+                        Electronics Engineer with over 6 years of experience in the end-to-end design, development, and implementation of hardware and software for embedded systems. I have a proven track record focusing on R&D, backed by peer-reviewed publications in international journals.
+                    </p>
+                    <p class="text-gray-400 text-lg leading-relaxed mb-8" data-i18n="about_p2">
+                        My expertise encompasses digital circuit design, strategic component selection, microcontroller programming (especially ESP32 series and ATmega), 3D enclosure modeling, and the integration of IoT-oriented web platforms using AWS and mobile apps with Flutter.
+                    </p>
+                    
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="p-4 rounded-xl bg-tech-card border border-gray-800">
+                            <h4 class="font-bold text-tech-primary text-3xl mb-1">+6</h4>
+                            <p class="text-sm text-gray-400" data-i18n="about_exp">Years of Experience</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-tech-card border border-gray-800">
+                            <h4 class="font-bold text-tech-accent text-3xl mb-1">5+</h4>
+                            <p class="text-sm text-gray-400" data-i18n="about_proj">GNSS Products Developed</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="skills" class="bg-tech-card/50 p-8 rounded-2xl border border-gray-800">
+                    <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                        <i class="fas fa-tools text-tech-primary"></i> <span data-i18n="skills_title">Core Competencies</span>
+                    </h3>
+                    
+                    <div class="space-y-6">
+                        <!-- Category 1 -->
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3" data-i18n="skill_cat_1">Embedded Systems & Firmware</h4>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="skill-badge">C/C++</span>
+                                <span class="skill-badge">ESP-IDF</span>
+                                <span class="skill-badge">FreeRTOS</span>
+                                <span class="skill-badge text-tech-primary border-tech-primary/50">ESP32 Series</span>
+                                <span class="skill-badge">ATmega</span>
+                                <span class="skill-badge">VHDL / FPGA</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Category 2 -->
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3" data-i18n="skill_cat_2">Hardware & PCB Design</h4>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="skill-badge text-tech-accent border-tech-accent/50">Altium Designer</span>
+                                <span class="skill-badge">KiCad</span>
+                                <span class="skill-badge">Autodesk EAGLE</span>
+                                <span class="skill-badge">Power Electronics (DC-DC)</span>
+                                <span class="skill-badge">SMT Assembly</span>
+                            </div>
+                        </div>
+
+                        <!-- Category 3 -->
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3" data-i18n="skill_cat_3">Software, Cloud & 3D</h4>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="skill-badge text-blue-400 border-blue-400/50">Dart / Flutter</span>
+                                <span class="skill-badge">Python</span>
+                                <span class="skill-badge">AWS (Lambda, DynamoDB)</span>
+                                <span class="skill-badge">Fusion 360 (3D CAD)</span>
+                            </div>
+                        </div>
+
+                        <!-- Category 4 -->
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3" data-i18n="skill_cat_4">Protocols & Specializations</h4>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="skill-badge border-purple-500/50 text-purple-400">RTK/GNSS</span>
+                                <span class="skill-badge">LoRa</span>
+                                <span class="skill-badge">BLE / Zigbee</span>
+                                <span class="skill-badge">MQTT</span>
+                                <span class="skill-badge">I2C / SPI / UART</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="experience" class="py-24 bg-[#0a0f18] relative border-t border-gray-800/50">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4" data-i18n="exp_title">Experience & Education</h2>
+                <div class="w-24 h-1 bg-tech-primary mx-auto rounded-full"></div>
+            </div>
+
+            <div class="relative border-l border-gray-700 ml-3 md:ml-6 space-y-12">
+                
+                <!-- Experience 1 -->
+                <div class="relative pl-8 md:pl-0">
+                    <div class="md:hidden absolute w-4 h-4 rounded-full bg-tech-primary -left-[9px] top-1.5 border-4 border-[#0a0f18]"></div>
+                    <div class="md:grid md:grid-cols-5 gap-8 items-start timeline-card p-6 rounded-2xl bg-tech-card/30 border border-gray-800 hover:bg-tech-card/80">
+                        <div class="md:col-span-1 md:text-right mb-4 md:mb-0 relative">
+                            <div class="hidden md:block absolute w-4 h-4 rounded-full bg-tech-primary right-[-41px] top-1.5 border-4 border-[#0a0f18]"></div>
+                            <span class="text-tech-primary font-mono text-sm font-bold block">Apr 2021 - Present</span>
+                        </div>
+                        <div class="md:col-span-4">
+                            <h3 class="text-xl font-bold text-white mb-1" data-i18n="exp_1_title">R&D Embedded Hardware and Software</h3>
+                            <h4 class="text-gray-400 font-medium mb-3">Mettatec</h4>
+                            <p class="text-gray-400 text-sm leading-relaxed" data-i18n="exp_1_desc">Directed the end-to-end electronic product development of 5+ high-precision GNSS products (RTK, NTRIP), from conceptualization and PCB design to firmware programming and final deployment.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Education 1 -->
+                <div class="relative pl-8 md:pl-0">
+                    <div class="md:hidden absolute w-4 h-4 rounded-full bg-tech-accent -left-[9px] top-1.5 border-4 border-[#0a0f18]"></div>
+                    <div class="md:grid md:grid-cols-5 gap-8 items-start timeline-card p-6 rounded-2xl bg-tech-card/30 border border-gray-800 hover:bg-tech-card/80">
+                        <div class="md:col-span-1 md:text-right mb-4 md:mb-0 relative">
+                            <div class="hidden md:block absolute w-4 h-4 rounded-full bg-tech-accent right-[-41px] top-1.5 border-4 border-[#0a0f18]"></div>
+                            <span class="text-tech-accent font-mono text-sm font-bold block">2024 - 2026</span>
+                        </div>
+                        <div class="md:col-span-4">
+                            <h3 class="text-xl font-bold text-white mb-1" data-i18n="edu_1_title">Master of Science - MS, Electrical and Electronics Engineering</h3>
+                            <h4 class="text-gray-400 font-medium mb-3">UTEC Postgraduate</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Experience 2 -->
+                <div class="relative pl-8 md:pl-0">
+                    <div class="md:hidden absolute w-4 h-4 rounded-full bg-gray-500 -left-[9px] top-1.5 border-4 border-[#0a0f18]"></div>
+                    <div class="md:grid md:grid-cols-5 gap-8 items-start timeline-card p-6 rounded-2xl bg-tech-card/30 border border-gray-800 hover:bg-tech-card/80">
+                        <div class="md:col-span-1 md:text-right mb-4 md:mb-0 relative">
+                            <div class="hidden md:block absolute w-4 h-4 rounded-full bg-gray-500 right-[-41px] top-1.5 border-4 border-[#0a0f18]"></div>
+                            <span class="text-gray-400 font-mono text-sm font-bold block">2021 - Present</span>
+                        </div>
+                        <div class="md:col-span-4">
+                            <h3 class="text-xl font-bold text-white mb-1" data-i18n="exp_2_title">Senior Teaching & Research Assistant</h3>
+                            <h4 class="text-gray-400 font-medium mb-3">University of Engineering and Technology - UTEC</h4>
+                            <p class="text-gray-400 text-sm leading-relaxed" data-i18n="exp_2_desc">Responsible for supporting and conducting the Digital Circuits Laboratory, teaching VHDL for FPGA implementation using Digilent Basys 3. Conducted research resulting in multiple publications.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Education 2 -->
+                <div class="relative pl-8 md:pl-0">
+                    <div class="md:hidden absolute w-4 h-4 rounded-full bg-gray-500 -left-[9px] top-1.5 border-4 border-[#0a0f18]"></div>
+                    <div class="md:grid md:grid-cols-5 gap-8 items-start timeline-card p-6 rounded-2xl bg-tech-card/30 border border-gray-800 hover:bg-tech-card/80">
+                        <div class="md:col-span-1 md:text-right mb-4 md:mb-0 relative">
+                            <div class="hidden md:block absolute w-4 h-4 rounded-full bg-gray-500 right-[-41px] top-1.5 border-4 border-[#0a0f18]"></div>
+                            <span class="text-gray-400 font-mono text-sm font-bold block">2015 - 2020</span>
+                        </div>
+                        <div class="md:col-span-4">
+                            <h3 class="text-xl font-bold text-white mb-1" data-i18n="edu_2_title">Electronics Engineering - Engineering Degree</h3>
+                            <h4 class="text-gray-400 font-medium mb-3">UTEC</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="portfolio" class="py-24 bg-tech-dark border-t border-gray-800/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4" data-i18n="port_title">Projects & Publications</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto" data-i18n="port_desc">A selection of my professional hardware developments, IoT systems, and academic research papers.</p>
+            </div>
+
+            <!-- Filter Buttons -->
+            <div class="flex flex-wrap justify-center gap-3 mb-12" id="filter-container">
+                <button class="filter-btn active px-5 py-2 rounded-full bg-tech-primary text-white text-sm font-medium transition-colors" data-filter="all" data-i18n="filter_all">All</button>
+                <button class="filter-btn px-5 py-2 rounded-full bg-tech-card border border-gray-700 text-gray-300 hover:text-white hover:border-tech-primary text-sm font-medium transition-colors" data-filter="hardware">Hardware / GNSS</button>
+                <button class="filter-btn px-5 py-2 rounded-full bg-tech-card border border-gray-700 text-gray-300 hover:text-white hover:border-tech-primary text-sm font-medium transition-colors" data-filter="wsn" data-i18n="filter_wsn">WSN / IoT</button>
+                <button class="filter-btn px-5 py-2 rounded-full bg-tech-card border border-gray-700 text-gray-300 hover:text-white hover:border-tech-primary text-sm font-medium transition-colors" data-filter="research" data-i18n="filter_pub">Publications</button>
+            </div>
+
+            <!-- Portfolio Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="portfolio-grid">
+                
+                <!-- Project 1 (GNSS) -->
+                <div class="project-card bg-tech-card rounded-2xl overflow-hidden border border-gray-800 flex flex-col h-full portfolio-item hardware">
+                    <div class="relative h-48 overflow-hidden group">
+                        <img src="https://placehold.co/600x400/1e293b/0ea5e9?text=NTRIP+GNSS" alt="GNSS Device" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div class="flex gap-2 mb-3">
+                            <span class="text-xs font-mono px-2 py-1 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30">GNSS</span>
+                            <span class="text-xs font-mono px-2 py-1 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">Hardware</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2 text-white" data-i18n="p1_title">NTRIP RTK GNSS Device for Photogrammetry</h3>
+                        <p class="text-gray-400 text-sm flex-1 mb-4" data-i18n="p1_desc">High-precision positioning device developed in 2025. Complete hardware design, enclosure modeling, and firmware implementation.</p>
+                        <div class="flex flex-wrap gap-2 text-xs text-gray-500 font-mono">
+                            <span>#Altium</span> <span>#ESP32</span> <span>#RTK</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 2 (GNSS Tilt) -->
+                <div class="project-card bg-tech-card rounded-2xl overflow-hidden border border-gray-800 flex flex-col h-full portfolio-item hardware">
+                    <div class="relative h-48 overflow-hidden group">
+                        <img src="https://placehold.co/600x400/1e293b/10b981?text=GNSS+Tilt+Comp" alt="GNSS Tilt" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div class="flex gap-2 mb-3">
+                            <span class="text-xs font-mono px-2 py-1 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30">GNSS</span>
+                            <span class="text-xs font-mono px-2 py-1 rounded bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">Firmware</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2 text-white" data-i18n="p2_title">RTK GNSS device with Tilt Compensation</h3>
+                        <p class="text-gray-400 text-sm flex-1 mb-4" data-i18n="p2_desc">Developed in 2024, integrating IMU sensors with GNSS data to dynamically compensate for pole tilt during surveying operations.</p>
+                        <div class="flex flex-wrap gap-2 text-xs text-gray-500 font-mono">
+                            <span>#C/C++</span> <span>#IMU</span> <span>#Hardware</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 3 (Museum WSN) -->
+                <div class="project-card bg-tech-card rounded-2xl overflow-hidden border border-gray-800 flex flex-col h-full portfolio-item wsn">
+                    <div class="relative h-48 overflow-hidden group">
+                        <img src="https://placehold.co/600x400/1e293b/f59e0b?text=Museum+WSN" alt="Museum WSN" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div class="flex gap-2 mb-3">
+                            <span class="text-xs font-mono px-2 py-1 rounded bg-tech-accent/20 text-tech-accent border border-tech-accent/30">WSN</span>
+                            <span class="text-xs font-mono px-2 py-1 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">IoT Web</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2 text-white" data-i18n="p3_title">Environmental Sensor Network for Museums</h3>
+                        <p class="text-gray-400 text-sm flex-1 mb-4" data-i18n="p3_desc">End-to-end system deployed in 2021 to monitor cultural heritage environments, including sensor nodes, gateway, and an online monitoring platform.</p>
+                        <div class="flex flex-wrap gap-2 text-xs text-gray-500 font-mono">
+                            <span>#LoRa</span> <span>#AWS</span> <span>#Embedded</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Publication 1 -->
+                <div class="project-card bg-tech-card rounded-2xl overflow-hidden border border-gray-800 flex flex-col h-full portfolio-item research wsn">
+                    <div class="relative h-48 overflow-hidden group bg-gray-900 flex items-center justify-center">
+                        <i class="fas fa-book-open text-6xl text-gray-700 group-hover:text-tech-primary transition-colors duration-500 group-hover:scale-110"></i>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div class="flex gap-2 mb-3">
+                            <span class="text-xs font-mono px-2 py-1 rounded bg-red-500/20 text-red-400 border border-red-500/30">Paper</span>
+                            <span class="text-xs font-mono px-2 py-1 rounded bg-gray-500/20 text-gray-400 border border-gray-500/30">MDPI 2026</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2 text-white" data-i18n="p4_title">Smart Energy Management in Ag WSN</h3>
+                        <p class="text-gray-400 text-sm flex-1 mb-4" data-i18n="p4_desc">Research paper: "Smart Energy Management in Agricultural Wireless Sensor Nodes Using TinyML-Based Adaptive Sampling".</p>
+                        <div class="flex flex-wrap gap-2 text-xs text-gray-500 font-mono">
+                            <span>#TinyML</span> <span>#WSN</span> <span>#EnergyOptimization</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Publication 2 -->
+                <div class="project-card bg-tech-card rounded-2xl overflow-hidden border border-gray-800 flex flex-col h-full portfolio-item research wsn">
+                    <div class="relative h-48 overflow-hidden group bg-gray-900 flex items-center justify-center">
+                        <i class="fas fa-file-alt text-6xl text-gray-700 group-hover:text-tech-accent transition-colors duration-500 group-hover:scale-110"></i>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div class="flex gap-2 mb-3">
+                            <span class="text-xs font-mono px-2 py-1 rounded bg-red-500/20 text-red-400 border border-red-500/30">IEEE Conf.</span>
+                            <span class="text-xs font-mono px-2 py-1 rounded bg-gray-500/20 text-gray-400 border border-gray-500/30">2025</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2 text-white" data-i18n="p5_title">WSN for Pitaya Farming</h3>
+                        <p class="text-gray-400 text-sm flex-1 mb-4" data-i18n="p5_desc">Published in IEEE CAFE 2025: "Wireless Sensor Network for Environmental Monitoring in Pitaya Farming".</p>
+                        <div class="flex flex-wrap gap-2 text-xs text-gray-500 font-mono">
+                            <span>#Agriculture</span> <span>#IoT</span> <span>#Research</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Publication 3 -->
+                <div class="project-card bg-tech-card rounded-2xl overflow-hidden border border-gray-800 flex flex-col h-full portfolio-item research wsn">
+                    <div class="relative h-48 overflow-hidden group bg-gray-900 flex items-center justify-center">
+                        <i class="fas fa-university text-6xl text-gray-700 group-hover:text-blue-400 transition-colors duration-500 group-hover:scale-110"></i>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div class="flex gap-2 mb-3">
+                            <span class="text-xs font-mono px-2 py-1 rounded bg-red-500/20 text-red-400 border border-red-500/30">Conference</span>
+                            <span class="text-xs font-mono px-2 py-1 rounded bg-gray-500/20 text-gray-400 border border-gray-500/30">2018 - 2022</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2 text-white" data-i18n="p6_title">Heritage & Control Systems</h3>
+                        <p class="text-gray-400 text-sm flex-1 mb-4" data-i18n="p6_desc">Papers spanning SENSORNETS 2022 (Environmental monitoring of cultural heritage) and IEEE INTERCON 2018 (SMS-based ON/OFF monitor).</p>
+                        <div class="flex flex-wrap gap-2 text-xs text-gray-500 font-mono">
+                            <span>#SensorNets</span> <span>#IEEE</span> <span>#GSM</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="py-24 bg-[#0a0f18] relative overflow-hidden border-t border-gray-800/50">
+        <div class="absolute inset-0 bg-tech-primary/5 blur-3xl rounded-full w-96 h-96 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+        
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="bg-tech-card border border-gray-800 rounded-3xl p-8 md:p-12 shadow-2xl text-center">
+                <i class="fas fa-paper-plane text-5xl text-tech-primary mb-6"></i>
+                <h2 class="text-3xl md:text-4xl font-bold mb-4" data-i18n="contact_title">Get In Touch</h2>
+                <p class="text-gray-400 mb-8 max-w-xl mx-auto" data-i18n="contact_desc">Looking to develop precision hardware, optimized firmware, or robust IoT networks? Let's discuss how my engineering experience can help.</p>
+                
+                <div class="flex flex-col sm:flex-row justify-center items-center gap-6 mb-8">
+                    <a href="mailto:ahinostrozam15@gmail.com" class="flex items-center gap-3 text-gray-300 hover:text-tech-primary transition-colors">
+                        <i class="fas fa-envelope text-xl"></i> ahinostrozam15@gmail.com
+                    </a>
+                    <a href="tel:+51965354051" class="flex items-center gap-3 text-gray-300 hover:text-tech-accent transition-colors">
+                        <i class="fas fa-phone text-xl"></i> (+51) 965354051
+                    </a>
+                </div>
+
+                <form id="contact-form" class="max-w-md mx-auto space-y-4 text-left">
+                    <div>
+                        <input type="text" id="name" data-i18n="contact_ph_name" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-tech-primary focus:ring-1 focus:ring-tech-primary transition-colors" placeholder="Your name">
+                    </div>
+                    <div>
+                        <input type="email" id="email" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-tech-primary focus:ring-1 focus:ring-tech-primary transition-colors" placeholder="you@email.com">
+                    </div>
+                    <div>
+                        <textarea id="message" data-i18n="contact_ph_msg" rows="4" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-tech-primary focus:ring-1 focus:ring-tech-primary transition-colors" placeholder="Tell me about your project..."></textarea>
+                    </div>
+                    <button type="button" onclick="alertMsg()" class="w-full bg-tech-primary text-white font-medium py-3 rounded-lg hover:bg-blue-500 transition-colors flex justify-center items-center gap-2">
+                        <span data-i18n="contact_btn">Send Message</span> <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <!-- Custom Alert -->
+                    <div id="custom-alert" class="hidden mt-4 p-4 rounded-lg bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 text-center text-sm" data-i18n="contact_alert">
+                        Thank you! This is a static portfolio. Please reach out via email or LinkedIn.
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-tech-dark py-12 border-t border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-satellite text-tech-primary"></i>
+                <span class="font-mono font-bold text-lg text-white">AH<span class="text-tech-primary">.</span>Eng</span>
+            </div>
+            
+            <p class="text-gray-500 text-sm" data-i18n="footer_text">© 2026 Adrián Hinostroza. Engineering & IoT.</p>
+            
+            <div class="flex space-x-4">
+                <a href="https://www.linkedin.com/in/athm15" target="_blank" class="text-gray-400 hover:text-[#0A66C2] transition-colors"><i class="fab fa-linkedin text-xl"></i></a>
+                <a href="mailto:ahinostrozam15@gmail.com" class="text-gray-400 hover:text-white transition-colors"><i class="fas fa-envelope text-xl"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // --- 0. Internationalization (i18n) Logic ---
+        const translations = {
+            en: {
+                nav_about: "About", nav_exp: "Experience", nav_skills: "Skills", nav_portfolio: "Projects", nav_contact: "Contact",
+                hero_badge: "MSc. Electronics Engineer",
+                hero_title: "Hi, I'm <br>\n <span class='tech-gradient-text'>Adrián Hinostroza</span>",
+                hero_desc: "Specialized in end-to-end design of embedded systems, high-precision GNSS receivers, and Wireless Sensor Networks applied to environmental monitoring.",
+                hero_btn_projects: "View Projects",
+                hero_btn_cv: "Download CV_ADRIAN_HINOSTROZA_2026.pdf",
+                hero_scroll: "Scroll",
+                about_title: "About Me",
+                about_p1: "Electronics Engineer with over 6 years of experience in the end-to-end design, development, and implementation of hardware and software for embedded systems. I have a proven track record focusing on R&D, backed by peer-reviewed publications in international journals.",
+                about_p2: "My expertise encompasses digital circuit design, strategic component selection, microcontroller programming (especially ESP32 series and ATmega), 3D enclosure modeling, and the integration of IoT-oriented web platforms using AWS and mobile apps with Flutter.",
+                about_exp: "Years of Experience", about_proj: "GNSS Products Developed",
+                skills_title: "Core Competencies",
+                skill_cat_1: "Embedded Systems & Firmware", skill_cat_2: "Hardware & PCB Design",
+                skill_cat_3: "Software, Cloud & 3D", skill_cat_4: "Protocols & Specializations",
+                exp_title: "Experience & Education",
+                exp_1_title: "R&D Embedded Hardware and Software",
+                exp_1_desc: "Directed the end-to-end electronic product development of 5+ high-precision GNSS products (RTK, NTRIP), from conceptualization and PCB design to firmware programming and final deployment.",
+                edu_1_title: "Master of Science - MS, Electrical and Electronics Engineering",
+                exp_2_title: "Senior Teaching & Research Assistant",
+                exp_2_desc: "Responsible for supporting and conducting the Digital Circuits Laboratory, teaching VHDL for FPGA implementation using Digilent Basys 3. Conducted research resulting in multiple publications.",
+                edu_2_title: "Electronics Engineering - Engineering Degree",
+                port_title: "Projects & Publications",
+                port_desc: "A selection of my professional hardware developments, IoT systems, and academic research papers.",
+                filter_all: "All", filter_wsn: "WSN / IoT", filter_pub: "Publications",
+                p1_title: "NTRIP RTK GNSS Device for Photogrammetry", p1_desc: "High-precision positioning device developed in 2025. Complete hardware design, enclosure modeling, and firmware implementation.",
+                p2_title: "RTK GNSS device with Tilt Compensation", p2_desc: "Developed in 2024, integrating IMU sensors with GNSS data to dynamically compensate for pole tilt during surveying operations.",
+                p3_title: "Environmental Sensor Network for Museums", p3_desc: "End-to-end system deployed in 2021 to monitor cultural heritage environments, including sensor nodes, gateway, and an online monitoring platform.",
+                p4_title: "Smart Energy Management in Ag WSN", p4_desc: "Research paper: \"Smart Energy Management in Agricultural Wireless Sensor Nodes Using TinyML-Based Adaptive Sampling\".",
+                p5_title: "WSN for Pitaya Farming", p5_desc: "Published in IEEE CAFE 2025: \"Wireless Sensor Network for Environmental Monitoring in Pitaya Farming\".",
+                p6_title: "Heritage & Control Systems", p6_desc: "Papers spanning SENSORNETS 2022 (Environmental monitoring of cultural heritage) and IEEE INTERCON 2018 (SMS-based ON/OFF monitor).",
+                contact_title: "Get In Touch",
+                contact_desc: "Looking to develop precision hardware, optimized firmware, or robust IoT networks? Let's discuss how my engineering experience can help.",
+                contact_ph_name: "Your name",
+                contact_ph_msg: "Tell me about your project...",
+                contact_btn: "Send Message",
+                contact_alert: "Thank you! This is a static portfolio. Please reach out via email or LinkedIn.",
+                footer_text: "© 2026 Adrián Hinostroza. Engineering & IoT."
+            },
+            es: {
+                nav_about: "Sobre Mí", nav_exp: "Experiencia", nav_skills: "Habilidades", nav_portfolio: "Proyectos", nav_contact: "Contacto",
+                hero_badge: "Ingeniero Electrónico MSc.",
+                hero_title: "Hola, soy <br>\n <span class='tech-gradient-text'>Adrián Hinostroza</span>",
+                hero_desc: "Especializado en el diseño end-to-end de sistemas embebidos, receptores GNSS de alta precisión y Redes de Sensores WSN aplicadas al monitoreo ambiental.",
+                hero_btn_projects: "Ver Proyectos",
+                hero_btn_cv: "Descargar CV_ADRIAN_HINOSTROZA_2026.pdf",
+                hero_scroll: "Desplazar",
+                about_title: "Sobre Mí",
+                about_p1: "Ingeniero Electrónico con más de 6 años de experiencia en el diseño, desarrollo e implementación de hardware y software para sistemas embebidos. Tengo una sólida trayectoria centrada en I+D, respaldada por publicaciones revisadas por pares en revistas internacionales.",
+                about_p2: "Mi experiencia abarca el diseño de circuitos digitales, selección de componentes, programación de microcontroladores (serie ESP32 y ATmega), modelado de carcasas 3D e integración de plataformas web IoT usando AWS y apps móviles con Flutter.",
+                about_exp: "Años de Experiencia", about_proj: "Productos GNSS Desarrollados",
+                skills_title: "Competencias Principales",
+                skill_cat_1: "Sistemas Embebidos & Firmware", skill_cat_2: "Hardware & Diseño PCB",
+                skill_cat_3: "Software, Cloud & 3D", skill_cat_4: "Protocolos & Especialidades",
+                exp_title: "Experiencia y Educación",
+                exp_1_title: "I+D Hardware y Software Embebido",
+                exp_1_desc: "Dirigí el desarrollo de productos electrónicos de principio a fin de más de 5 productos GNSS de alta precisión (RTK, NTRIP), desde la conceptualización y diseño PCB hasta la programación de firmware y despliegue final.",
+                edu_1_title: "Maestría en Ciencias - MS, Ingeniería Eléctrica y Electrónica",
+                exp_2_title: "Asistente Senior de Docencia e Investigación",
+                exp_2_desc: "Responsable de apoyar y dirigir el Laboratorio de Circuitos Digitales, enseñando VHDL para implementación en FPGA usando Digilent Basys 3. Llevé a cabo investigaciones que resultaron en múltiples publicaciones.",
+                edu_2_title: "Ingeniería Electrónica - Grado de Ingeniero",
+                port_title: "Proyectos y Publicaciones",
+                port_desc: "Una selección de mis desarrollos profesionales de hardware, sistemas IoT y artículos de investigación académica.",
+                filter_all: "Todos", filter_wsn: "WSN / IoT", filter_pub: "Publicaciones",
+                p1_title: "Dispositivo GNSS RTK NTRIP para Fotogrametría", p1_desc: "Dispositivo de posicionamiento de alta precisión desarrollado en 2025. Diseño completo de hardware, modelado de carcasa e implementación de firmware.",
+                p2_title: "Dispositivo GNSS RTK con Compensación de Inclinación", p2_desc: "Desarrollado en 2024, integra sensores IMU con datos GNSS para compensar dinámicamente la inclinación del bastón durante operaciones topográficas.",
+                p3_title: "Red de Sensores Ambientales para Museos", p3_desc: "Sistema end-to-end desplegado en 2021 para monitorear entornos de patrimonio cultural, incluyendo nodos sensores, gateway y plataforma online.",
+                p4_title: "Gestión Inteligente de Energía en WSN Agrícola", p4_desc: "Artículo de investigación: \"Smart Energy Management in Agricultural Wireless Sensor Nodes Using TinyML-Based Adaptive Sampling\".",
+                p5_title: "WSN para el Cultivo de Pitahaya", p5_desc: "Publicado en IEEE CAFE 2025: \"Wireless Sensor Network for Environmental Monitoring in Pitaya Farming\".",
+                p6_title: "Patrimonio y Sistemas de Control", p6_desc: "Artículos en SENSORNETS 2022 (Monitoreo ambiental de patrimonio cultural) e IEEE INTERCON 2018 (Monitor ON/OFF basado en SMS).",
+                contact_title: "Ponte en Contacto",
+                contact_desc: "¿Buscas desarrollar hardware de precisión, firmware optimizado o redes IoT robustas? Hablemos de cómo mi experiencia puede ayudar.",
+                contact_ph_name: "Tu nombre",
+                contact_ph_msg: "Cuéntame sobre tu proyecto...",
+                contact_btn: "Enviar Mensaje",
+                contact_alert: "¡Gracias! Este es un portafolio estático. Por favor, contáctame vía email o LinkedIn.",
+                footer_text: "© 2026 Adrián Hinostroza. Ingeniería & IoT."
+            }
+        };
+
+        let currentLang = 'en';
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'es' : 'en';
+            document.documentElement.lang = currentLang;
+            
+            // Translate all tagged elements
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[currentLang][key]) {
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                        el.placeholder = translations[currentLang][key];
+                    } else {
+                        el.innerHTML = translations[currentLang][key];
+                    }
+                }
+            });
+
+            // Update language toggle button text dynamically
+            const nextLangText = currentLang === 'en' ? 'ES' : 'EN';
+            document.querySelectorAll('.lang-toggle-text').forEach(el => {
+                el.textContent = nextLangText;
+            });
+        }
+
+        // --- 1. Mobile Menu Toggle ---
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        mobileMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+            });
+        });
+
+        // --- 2. Navbar Background on Scroll ---
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 20) {
+                navbar.classList.add('shadow-lg');
+            } else {
+                navbar.classList.remove('shadow-lg');
+            }
+        });
+
+        // --- 3. Portfolio Filtering Logic ---
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const portfolioItems = document.querySelectorAll('.portfolio-item');
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => {
+                    b.classList.remove('bg-tech-primary', 'text-white');
+                    b.classList.add('bg-tech-card', 'text-gray-300');
+                });
+                btn.classList.remove('bg-tech-card', 'text-gray-300');
+                btn.classList.add('bg-tech-primary', 'text-white');
+
+                const filterValue = btn.getAttribute('data-filter');
+
+                portfolioItems.forEach(item => {
+                    if (filterValue === 'all') {
+                        item.style.display = 'flex';
+                        setTimeout(() => { item.style.opacity = '1'; item.style.transform = 'scale(1)'; }, 50);
+                    } else if (item.classList.contains(filterValue)) {
+                        item.style.display = 'flex';
+                        setTimeout(() => { item.style.opacity = '1'; item.style.transform = 'scale(1)'; }, 50);
+                    } else {
+                        item.style.opacity = '0';
+                        item.style.transform = 'scale(0.9)';
+                        setTimeout(() => { item.style.display = 'none'; }, 300); 
+                    }
+                });
+            });
+        });
+
+        // --- 4. Custom Message Alert ---
+        function alertMsg() {
+            const alertBox = document.getElementById('custom-alert');
+            alertBox.classList.remove('hidden');
+            setTimeout(() => {
+                alertBox.classList.add('hidden');
+            }, 4000);
+        }
+
+        // --- 5. Canvas Background Animation ---
+        const canvas = document.getElementById('canvas-bg');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let nodes = [];
+
+        function initCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            nodes = [];
+            const numNodes = Math.floor((width * height) / 15000);
+            
+            for (let i = 0; i < numNodes; i++) {
+                nodes.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    radius: Math.random() * 1.5 + 0.5
+                });
+            }
+        }
+
+        function animateCanvas() {
+            requestAnimationFrame(animateCanvas);
+            ctx.clearRect(0, 0, width, height);
+            
+            ctx.fillStyle = '#0ea5e9'; 
+            ctx.strokeStyle = 'rgba(14, 165, 233, 0.15)'; 
+            
+            for (let i = 0; i < nodes.length; i++) {
+                let node = nodes[i];
+                
+                node.x += node.vx;
+                node.y += node.vy;
+                
+                if (node.x < 0 || node.x > width) node.vx *= -1;
+                if (node.y < 0 || node.y > height) node.vy *= -1;
+                
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                for (let j = i + 1; j < nodes.length; j++) {
+                    let node2 = nodes[j];
+                    let dx = node.x - node2.x;
+                    let dy = node.y - node2.y;
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if (dist < 120) {
+                        ctx.beginPath();
+                        ctx.moveTo(node.x, node.y);
+                        ctx.lineTo(node2.x, node2.y);
+                        ctx.strokeStyle = `rgba(14, 165, 233, ${0.2 - (dist/120)*0.2})`; 
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            initCanvas();
+        });
+
+        window.onload = function() {
+            initCanvas();
+            animateCanvas();
+        };
+
+    </script>
+</body>
+</html>
